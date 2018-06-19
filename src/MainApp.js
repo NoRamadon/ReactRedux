@@ -7,6 +7,6 @@ const MainApp = () => (
   <Provider store={store}>
     <MovieNavigator />
   </Provider>
-);
+)
 
 export default MainApp;
