@@ -13,6 +13,7 @@ import { loadCategories } from '../redux/modules/categories';
 import Navigation from 'react-native-deprecated-custom-components'
 import StartScreen from '../component/StartScreen'
 import MovieScreen from '../component/MovieScreen'
+import SplashScreen from '../component/SplashScreen'
 
 class MovieNavigator extends Component {
 
@@ -67,9 +68,11 @@ class MovieNavigator extends Component {
     return (
 
       <Navigation.Navigator
-        initialRoute={{ name: 'StartScreen' }}
+        initialRoute={{ name: 'SplashScreen' }}
         renderScene={(route, navigator) => {
           switch (route.name) {
+            case 'SplashScreen':
+              return <SplashScreen/>
             case 'StartScreen':
               return <StartScreen loadingText={this.state.isLoading} onStartHandler={() => navigator.push({ name: 'MovieScreen' })} />
             case 'MovieScreen':
