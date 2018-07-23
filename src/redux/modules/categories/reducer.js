@@ -10,7 +10,7 @@ export default function reducer(state = initialState, action) {
       console.log(action.payload)
       return {
         ...state,
-        all: [...action.payload.movies],
+        all: [...action.payload],
       };
     default:
       console.log(action.payload)

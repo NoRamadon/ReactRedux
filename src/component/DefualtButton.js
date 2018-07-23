@@ -7,7 +7,7 @@ import {
 
 const DefualtButton = (props) => {
     return (
-        <TouchableOpacity style={styles.Button}>
+        <TouchableOpacity style={styles.Button} onPress={props.onPress}>
             <Text style={styles.Text}>{props.text}</Text>
         </TouchableOpacity>
     )

@@ -27,7 +27,7 @@ class SplashScreen extends Component {
                         underlineColorAndroid='transparent'
                         placeholder='Password'
                         secureTextEntry={true} />
-                    <DefualtButton text='Get Start'/>
+                    <DefualtButton text='Get Start' onPress={this.props.onStartHandler}/>
                     <Text style={styles.SkipText}>Skip</Text>
                 </KeyboardAvoidingView>
             </ImageBackground>

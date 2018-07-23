@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types'
 import {
   Alert,
-  ListView,
   Platform,
   StyleSheet,
   Text,
@@ -15,6 +14,8 @@ import StartScreen from '../component/StartScreen'
 import MovieScreen from '../component/MovieScreen'
 import SplashScreen from '../component/SplashScreen'
 
+const Realm = require('realm');
+
 class MovieNavigator extends Component {
 
   static propTypes = {
@@ -25,13 +26,26 @@ class MovieNavigator extends Component {
     super(props)
 
     this.state = {
+      realm: null,
       isLoading: 'is loading ...',
-      dataSource: this.props.movies,
+      dataSource: [{ name: '', price: '' }],
       movieIndex: 1,
     };
     this.props.dispatch(loadCategories());
 
     this._incrementMovieIndex = this._incrementMovieIndex.bind(this)
+  }
+
+  componentDidMount() {
+    Realm.open({
+      schema: [{ name: 'Book', properties: { name: 'string', price: 'string' } }]
+    }).then(realm => {
+      this.setState({
+        realm: realm,
+        dataSource: realm.objects('Book'),
+        isLoading: `Offline Mode ... ${realm.objects('Book').length}`,
+      })
+    });
   }
 
   _incrementMovieIndex() {
@@ -48,14 +62,34 @@ class MovieNavigator extends Component {
     })
   }
 
+  _deleteBook() {
+    const realm = this.state.realm
+    realm.write(() => {
+      let allBooks = realm.objects('Book');
+      realm.delete(allBooks)
+    });
+  }
+
   componentWillReceiveProps(nextProps) {
 
     if (this.props.movies !== nextProps.movies) {
+      if (this.state.realm != null) {
+        this._deleteBook()
+      }
+      nextProps.movies.map(
+        movie => {
+          this.state.realm.write(() => {
+            this.state.realm.create('Book', { name: `${movie.title}`, price: `${movie.price}` });
+          });
+        }
+      )
       this.setState({
-        isLoading: 'I\'m ready to relax...',
-        dataSource: nextProps.movies,
+        isLoading: `Online Mode ... ${this.state.dataSource.length}`,
+        dataSource: this.state.realm.objects('Book'),
       });
     }
+
+    console.log(this.state.dataSource)
   }
 
   render() {
@@ -64,6 +98,7 @@ class MovieNavigator extends Component {
     }
 
     const movie = this.state.dataSource[this.state.movieIndex]
+    console.log(this.state.dataSource)
 
     return (
 
@@ -72,15 +107,15 @@ class MovieNavigator extends Component {
         renderScene={(route, navigator) => {
           switch (route.name) {
             case 'SplashScreen':
-              return <SplashScreen/>
+              return <SplashScreen onStartHandler={() => navigator.push({ name: 'StartScreen' })} />
             case 'StartScreen':
               return <StartScreen loadingText={this.state.isLoading} onStartHandler={() => navigator.push({ name: 'MovieScreen' })} />
             case 'MovieScreen':
               return (
                 <MovieScreen
                   qId={this.state.movieIndex}
-                  title={movie.title}
-                  releaseYear={movie.releaseYear}
+                  title={movie.name}
+                  releaseYear={movie.price}
                   onNextMoviePress={this._incrementMovieIndex}
                 />)
           }

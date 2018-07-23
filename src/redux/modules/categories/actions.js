@@ -7,7 +7,7 @@ export function loadCategories() {
   return {
     types: [LOAD_CATEGORIES, LOAD_CATEGORIES_SUCCESS, LOAD_CATEGORIES_FAIL],
     promise: {
-      url: 'https://facebook.github.io/react-native/movies.json',
+      url: 'http://assignment.gae.golgek.mobi/api/v1/items',
       method: 'GET',
     },
   };
