@@ -1,20 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types'
-import {
-  Alert,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
 import { connect } from 'react-redux';
 import { loadCategories } from '../redux/modules/categories';
 import Navigation from 'react-native-deprecated-custom-components'
 import StartScreen from '../component/StartScreen'
 import MovieScreen from '../component/MovieScreen'
 import SplashScreen from '../component/SplashScreen'
-
-const Realm = require('realm');
+import { AsyncStorage } from "react-native"
 
 class MovieNavigator extends Component {
 
@@ -26,26 +18,29 @@ class MovieNavigator extends Component {
     super(props)
 
     this.state = {
-      realm: null,
       isLoading: 'is loading ...',
       dataSource: [{ name: '', price: '' }],
-      movieIndex: 1,
+      movieIndex: 0,
     };
+
     this.props.dispatch(loadCategories());
 
     this._incrementMovieIndex = this._incrementMovieIndex.bind(this)
   }
 
   componentDidMount() {
-    Realm.open({
-      schema: [{ name: 'Book', properties: { name: 'string', price: 'string' } }]
-    }).then(realm => {
+    this._retrieveData()
+  }
+
+  componentWillReceiveProps(nextProps) {
+
+    if (this.props.movies !== nextProps.movies) {
+      this._storeData(nextProps)
       this.setState({
-        realm: realm,
-        dataSource: realm.objects('Book'),
-        isLoading: `Offline Mode ... ${realm.objects('Book').length}`,
+        isLoading: 'I am ready online ...',
+        dataSource: nextProps.movies,
       })
-    });
+    }
   }
 
   _incrementMovieIndex() {
@@ -62,46 +57,33 @@ class MovieNavigator extends Component {
     })
   }
 
-  _deleteBook() {
-    const realm = this.state.realm
-    realm.write(() => {
-      let allBooks = realm.objects('Book');
-      realm.delete(allBooks)
-    });
+  _storeData = async (nextProps) => {
+    try {
+      const bookmarksString = JSON.stringify(nextProps.movies);
+      await AsyncStorage.setItem('@MyStore:bookmarks', bookmarksString);
+    } catch (error) {
+      console.log(error)
+    }
   }
 
-  componentWillReceiveProps(nextProps) {
-
-    if (this.props.movies !== nextProps.movies) {
-      if (this.state.realm != null) {
-        this._deleteBook()
+  _retrieveData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('@MyStore:bookmarks');
+      if (data !== null) {
+        const bookmarksArray = JSON.parse(data);
+        this.setState({
+          isLoading: 'data is offline mode ...',
+          dataSource: bookmarksArray
+        })
       }
-      nextProps.movies.map(
-        movie => {
-          this.state.realm.write(() => {
-            this.state.realm.create('Book', { name: `${movie.title}`, price: `${movie.price}` });
-          });
-        }
-      )
-      this.setState({
-        isLoading: `Online Mode ... ${this.state.dataSource.length}`,
-        dataSource: this.state.realm.objects('Book'),
-      });
+    } catch (error) {
+      console.log(error)
     }
-
-    console.log(this.state.dataSource)
   }
 
   render() {
-    if (this.props.isOnline === false) {
-      Alert.alert('Offline', 'You don\'t have internet connection');
-    }
-
     const movie = this.state.dataSource[this.state.movieIndex]
-    console.log(this.state.dataSource)
-
     return (
-
       <Navigation.Navigator
         initialRoute={{ name: 'SplashScreen' }}
         renderScene={(route, navigator) => {
@@ -114,7 +96,7 @@ class MovieNavigator extends Component {
               return (
                 <MovieScreen
                   qId={this.state.movieIndex}
-                  title={movie.name}
+                  title={movie.title}
                   releaseYear={movie.price}
                   onNextMoviePress={this._incrementMovieIndex}
                 />)
@@ -124,29 +106,6 @@ class MovieNavigator extends Component {
     );
   }
 };
-
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#ecf0f1',
-    flex: 1,
-  },
-  toolbar: {
-    backgroundColor: '#3498db',
-    color: '#fff',
-    fontSize: 20,
-    textAlign: 'center',
-    padding: 10,
-    ...Platform.select({
-      ios: {
-        paddingTop: 30,
-      },
-      android: {
-        paddingTop: 10,
-      },
-    }),
-  },
-});
 
 const mapStateToProps = (state) => {
   return {

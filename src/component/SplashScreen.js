@@ -6,14 +6,24 @@ import {
     ImageBackground,
     Image,
     TextInput,
-    TouchableOpacity,
 } from 'react-native'
 import DefualtButton from './DefualtButton'
+import AnimateLoadingButton from 'react-native-animate-loading-button'
 
 const bgImage = require('../../assets/splash.jpg')
 const logo = require('../../assets/zen.png')
 
 class SplashScreen extends Component {
+
+    _onPressHandler() {
+        this.loadingButton.showLoading(true);
+     
+        // mock
+        setTimeout(() => {
+          this.loadingButton.showLoading(false);
+        }, 2000);
+      }
+
     render() {
         return (
             <ImageBackground source={bgImage} style={styles.backgroundContainer} >
@@ -27,8 +37,20 @@ class SplashScreen extends Component {
                         underlineColorAndroid='transparent'
                         placeholder='Password'
                         secureTextEntry={true} />
-                    <DefualtButton text='Get Start' onPress={this.props.onStartHandler}/>
+                    <DefualtButton text='Get Start' onPress={this.props.onStartHandler} />
                     <Text style={styles.SkipText}>Skip</Text>
+
+                    <AnimateLoadingButton
+                        ref={c => (this.loadingButton = c)}
+                        width={300}
+                        height={50}
+                        title="Click me"
+                        titleFontSize={16}
+                        backgroundColor="rgba(66, 134, 244, 1)"
+                        titleColor="rgb(225,225,225)"
+                        borderRadius={30}
+                        onPress={this._onPressHandler.bind(this)}
+                    />
                 </KeyboardAvoidingView>
             </ImageBackground>
         )
@@ -70,7 +92,7 @@ const styles = StyleSheet.create({
     SkipText: {
         color: '#fff',
         textDecorationLine: 'underline',
-        marginTop: 30,
+        margin: 30,
     }
 })
 
